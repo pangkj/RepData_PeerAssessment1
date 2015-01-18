@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title></title>
+
+<script src="PA1_Template_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="PA1_Template_files/bootstrap-2.3.2/css/bootstrap.min.css" rel="stylesheet" />
+<link href="PA1_Template_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
+<script src="PA1_Template_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="PA1_Template_files/highlight/default.css"
+      type="text/css" />
+<script src="PA1_Template_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+
+<div id="TOC">
+<ul>
+<li><a href="#peer-assessment-1">Peer Assessment 1</a><ul>
+<li><a href="#author-pang-kj">author: “Pang KJ”</a></li>
+<li><a href="#download-unzip-and-load-data">1. Download, unzip, and load data</a></li>
+<li><a href="#what-is-the-mean-total-number-of-steps-taken-per-day">2. What is the mean total number of steps taken per day?</a></li>
+<li><a href="#what-is-the-average-daily-activity-pattern">3. What is the average daily activity pattern?</a></li>
+<li><a href="#imputing-missing-values">4. Imputing missing values</a></li>
+<li><a href="#are-there-differences-in-activity-patterns-between-weekdays-and-weekends">5. Are there differences in activity patterns between weekdays and weekends?</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="peer-assessment-1" class="section level1">
+<h1>Peer Assessment 1</h1>
+<div id="author-pang-kj" class="section level2">
+<h2>author: “Pang KJ”</h2>
+</div>
+<div id="download-unzip-and-load-data" class="section level2">
+<h2>1. Download, unzip, and load data</h2>
+<pre class="r"><code>#doanload and unzip data
+if(!file.exists(&quot;activity.csv&quot;) )
+{
+  url&lt;-&quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;
+  filename&lt;-&quot;repdata_data_activity.zip&quot;
+  download.file(url,filename)
+  unzip(filename)
+}
+#read data
+Activity&lt;- read.csv(&quot;activity.csv&quot;)</code></pre>
+</div>
+<div id="what-is-the-mean-total-number-of-steps-taken-per-day" class="section level2">
+<h2>2. What is the mean total number of steps taken per day?</h2>
+<pre class="r"><code>options(scipen = 1, digits = 0)
+Steps&lt;-tapply(Activity$steps, Activity$date, sum)
+step_median&lt;- median(Steps,na.rm=TRUE)
+step_mean&lt;- mean(Steps,na.rm=TRUE)
+hist(Steps, breaks=25,
+     main=&quot;Histgram of total numbers taken each day&quot;,
+     xlab=&quot;Steps taken each day&quot;)</code></pre>
+<p><img src="PA1_Template_files/figure-html/data%20summary-1.png" /></p>
+<p>The mean and median of total number of steps taken each day are 10765 and 10766, repectively.</p>
+</div>
+<div id="what-is-the-average-daily-activity-pattern" class="section level2">
+<h2>3. What is the average daily activity pattern?</h2>
+<pre class="r"><code>#get rid of data with NA&#39;s
+Activity1&lt;-Activity[complete.cases(Activity),]
+#get the average steps taken in each interval across all days
+DailyPattern&lt;-tapply(Activity1$steps, Activity1$interval, mean)
+#Create a dataframe from Array DailyPattern with variables:interval and steps (average)
+Step_Minute&lt;-data.frame(interval=as.numeric(names(DailyPattern)), steps=DailyPattern)
+#Plot interval VS average steps
+plot(Step_Minute, type=&quot;l&quot;, 
+     main=&quot;Daily activity pattern&quot;, 
+     xlab=&quot;Time Interval (every 5 minutes)&quot;,
+     ylab=&quot;Steps&quot;)</code></pre>
+<p><img src="PA1_Template_files/figure-html/data%20summary%202-1.png" /></p>
+<pre class="r"><code>#Get the interval value of the highest average step
+max&lt;-Step_Minute[Step_Minute$steps==max(Step_Minute$steps),]</code></pre>
+<p>The 835 th interval, on average across all the days in the dataset, contains the maximum number of steps : 206 steps.</p>
+</div>
+<div id="imputing-missing-values" class="section level2">
+<h2>4. Imputing missing values</h2>
+<p>Strategy: Each missing data (NA) under variable ‘steps’ will be filled with the mean value of that particular 5-minute interval of all days in this dataset.</p>
+<pre class="r"><code>#Get the number of data with NA&#39;s
+Num_Missing&lt;-!complete.cases(Activity)
+missing &lt;-nrow(Activity[Num_Missing,]) 
+#create a new dataset Activity2, which is identical to Activity
+Activity2&lt;-Activity
+#fill NA&#39;s in dataset Activity2 with the mean of correspondent intervals
+for (i in 1  : nrow(Activity2) )
+  {
+    if (is.na(Activity2$steps[i])) 
+      {
+         Activity2$steps[i]=Step_Minute[Step_Minute$interval==(Activity2$interval[i]),2]
+      }
+  }
+#get the total number of steps taken in each day
+Steps2&lt;-tapply(Activity2$steps, Activity2$date, sum)
+#get the median and mean, and plot a histogram
+New_median&lt;-median(Steps2)
+New_mean&lt;- mean(Steps2)
+hist(Steps2, breaks=60,
+     main=&quot;Histgram of total numbers taken each day&quot;,
+     xlab=&quot;Steps taken each day&quot;)</code></pre>
+<p><img src="PA1_Template_files/figure-html/unnamed-chunk-1-1.png" /></p>
+<p>There are 2304 missing values in the dataset. The median and mean of the new dataset Activity2 are 10766 and 10766, respectively. The mean value of steps taken in each interval did not change, however, the median changed a little bit, from 10765 to 10766.</p>
+</div>
+<div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
+<h2>5. Are there differences in activity patterns between weekdays and weekends?</h2>
+<pre class="r"><code>#Add a new variable DayCategory to Activity2 with two levels: Weekday and weekend
+for (i in 1  : nrow(Activity2) )
+{
+  if (weekdays(as.Date(Activity2$date[i]))==&quot;Saturday&quot; | weekdays(as.Date(Activity2$date[i]))==&quot;Sunday&quot;) 
+  {
+    Activity2$DayCategory[i]&lt;-&quot;weekend&quot;
+  }
+  else
+  {
+    Activity2$DayCategory[i]&lt;-&quot;weekday&quot;
+  }
+}
+#get mean steps taken in each interval for all weekdays and weekends, respectively
+Act_Weekday&lt;-Activity2[Activity2$DayCategory==&quot;weekday&quot;,]
+Act_Weekend&lt;-Activity2[Activity2$DayCategory==&quot;weekend&quot;,]
+WeekdayPattern&lt;-tapply(Act_Weekday$steps, Act_Weekday$interval, mean)
+WeekendPattern&lt;-tapply(Act_Weekend$steps, Act_Weekend$interval, mean)
+Step_Weekday&lt;-data.frame(interval=as.numeric(names(WeekdayPattern)), steps=WeekdayPattern,DayCategory=&quot;Weekday&quot;)
+Step_Weekend&lt;-data.frame(interval=as.numeric(names(WeekendPattern)), steps=WeekendPattern,DayCategory=&quot;Weekend&quot;)
+#combine two dataframes together
+Stepdata=rbind(Step_Weekday,Step_Weekend)
+#Plot steps vs interval for both weekday and weekend (levels)
+DayCategory&lt;-as.factor(Stepdata$DayCategory)
+if(!require(lattice))
+{
+    install.packages(&quot;lattice&quot;)
+    require(lattice)
+}</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre class="r"><code>xyplot(steps ~ interval | DayCategory, data = Stepdata, type = &quot;l&quot;,layout = c(1, 2),
+       xlab=&quot;Interval (every 5 minutes)&quot;, ylab=&quot;Number of steps&quot;)</code></pre>
+<p><img src="PA1_Template_files/figure-html/unnamed-chunk-2-1.png" /></p>
+<p>Yes, the activity patterns of weekdays and weekends are different. During weekends, people started their activities later than they did in weekdays, and the intensity of activities later in the day would be higher than that in weekdays. Also, people tended to go to bed later during weekends than in weekdays.</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,16 +1,10 @@
----
-output:
-  html_document:
-    keep_md: yes
-    self_contained: no
-    toc: yes
----
 #Peer Assessment 1
 author: "Pang KJ"
 ---
 ## 1. Download, unzip, and load data 
 
-```{r download & unzip, echo=TRUE}
+
+```r
 #doanload and unzip data
 if(!file.exists("activity.csv") )
 {
@@ -25,7 +19,8 @@ Activity<- read.csv("activity.csv")
 
 ## 2. What is the mean total number of steps taken per day?
 
-```{r data summary, echo=TRUE}
+
+```r
 options(scipen = 1, digits = 0)
 Steps<-tapply(Activity$steps, Activity$date, sum)
 step_median<- median(Steps,na.rm=TRUE)
@@ -35,11 +30,14 @@ hist(Steps, breaks=25,
      xlab="Steps taken each day")
 ```
 
-The mean and median of total number of steps taken each day are `r step_median` and `r step_mean`, repectively.
+![](PA1_Template_files/figure-html/data summary-1.png) 
+
+The mean and median of total number of steps taken each day are 10765 and 10766, repectively.
 
 ## 3. What is the average daily activity pattern?
 
-```{r data summary 2, echo=TRUE}
+
+```r
 #get rid of data with NA's
 Activity1<-Activity[complete.cases(Activity),]
 #get the average steps taken in each interval across all days
@@ -51,17 +49,23 @@ plot(Step_Minute, type="l",
      main="Daily activity pattern", 
      xlab="Time Interval (every 5 minutes)",
      ylab="Steps")
+```
+
+![](PA1_Template_files/figure-html/data summary 2-1.png) 
+
+```r
 #Get the interval value of the highest average step
 max<-Step_Minute[Step_Minute$steps==max(Step_Minute$steps),]
 ```
 
-The `r max$interval` th interval, on average across all the days in the dataset, contains the maximum number of steps : `r max$steps` steps.
+The 835 th interval, on average across all the days in the dataset, contains the maximum number of steps : 206 steps.
 
 ## 4. Imputing missing values
 Strategy: 
 Each missing data (NA) under variable 'steps' will be filled with the mean value of that particular 5-minute interval of all days in this dataset.
 
-```{r ,echo=TRUE}
+
+```r
 #Get the number of data with NA's
 Num_Missing<-!complete.cases(Activity)
 missing <-nrow(Activity[Num_Missing,]) 
@@ -85,11 +89,14 @@ hist(Steps2, breaks=60,
      xlab="Steps taken each day")
 ```
 
-There are `r missing` missing values in the dataset. The median and mean of the new dataset Activity2 are `r New_median` and `r New_mean`, respectively. The mean value of steps taken in each interval did not change, however, the median changed a little bit, from `r step_median` to `r New_median`.
+![](PA1_Template_files/figure-html/unnamed-chunk-1-1.png) 
+
+There are 2304 missing values in the dataset. The median and mean of the new dataset Activity2 are 10766 and 10766, respectively. The mean value of steps taken in each interval did not change, however, the median changed a little bit, from 10765 to 10766.
 
 ## 5. Are there differences in activity patterns between weekdays and weekends?
 
-```{r ,echo=TRUE}
+
+```r
 #Add a new variable DayCategory to Activity2 with two levels: Weekday and weekend
 for (i in 1  : nrow(Activity2) )
 {
@@ -118,9 +125,18 @@ if(!require(lattice))
     install.packages("lattice")
     require(lattice)
 }
+```
+
+```
+## Loading required package: lattice
+```
+
+```r
 xyplot(steps ~ interval | DayCategory, data = Stepdata, type = "l",layout = c(1, 2),
        xlab="Interval (every 5 minutes)", ylab="Number of steps")
 ```
+
+![](PA1_Template_files/figure-html/unnamed-chunk-2-1.png) 
 
 Yes, the activity patterns of weekdays and weekends are different. During weekends, people started their activities later than they did in weekdays, and the intensity of activities later in the day would be higher than that in weekdays. Also, people tended to go to bed later during weekends than in weekdays. 
 
